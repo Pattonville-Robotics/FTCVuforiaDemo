@@ -39,13 +39,16 @@ import static android.view.View.X;
 
 public class Robot_Navigation
 {
+    // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.  Alt. is BACK
+    public enum CameraType {Front, Back};
+
+    // Select orientation of the camera. LandscapeLeft is camera on left from behind the robot.
+    public enum CameraRotation {Portrait, LandscapeLeft, LandscapeRight};
+
     // Constants
     private static final int     MAX_TARGETS    =   4;
     private static final double  ON_AXIS        =  10;      // Within 1.0 cm of target center-line
     private static final double  CLOSE_ENOUGH   =  20;      // Within 2.0 cm of final target standoff
-
-    // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.  Alt. is BACK
-    private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = VuforiaLocalizer.CameraDirection.FRONT;
 
     public  static final double  YAW_GAIN       =  0.018;   // Rate at which we respond to heading error
     public  static final double  LATERAL_GAIN   =  0.0027;  // Rate at which we respond to off-axis error
@@ -53,7 +56,7 @@ public class Robot_Navigation
 
     /* Private class members. */
     private LinearOpMode        myOpMode;       // Access to the OpMode object
-    private Robot_OmniDrive     myRobot;        // Access to the Robot hardware
+////    private Robot_OmniDrive     myRobot;        // Access to the Robot hardware
     private VuforiaTrackables   targets;        // List of active targets
 
     // Navigation data is only valid if targetFound == true;
@@ -90,13 +93,16 @@ public class Robot_Navigation
         {
             // Display the current visible target name, robot info, target info, and required robot action.
             myOpMode.telemetry.addData("Visible", targetName);
-            myOpMode.telemetry.addData("Robot", "[X]:[Y] (B) [%5.0fmm]:[%5.0fmm] (%4.0f°)",
-                    robotX, robotY, robotBearing);
-            myOpMode.telemetry.addData("Target", "[R] (B):(RB) [%5.0fmm] (%4.0f°):(%4.0f°)",
-                    targetRange, targetBearing, relativeBearing);
-            myOpMode.telemetry.addData("- Turn    ", "%s %4.0f°",  relativeBearing < 0 ? ">>> CW " : "<<< CCW", Math.abs(relativeBearing));
-            myOpMode.telemetry.addData("- Strafe  ", "%s %5.0fmm", robotY < 0 ? "LEFT" : "RIGHT", Math.abs(robotY));
-            myOpMode.telemetry.addData("- Distance", "%5.0fmm", Math.abs(robotX));
+            myOpMode.telemetry.addData("Robot Range", "%3.0f in", robotX / 25.4);
+            myOpMode.telemetry.addData("Robot Offset", "%3.0f in", robotY / 25.4);
+            myOpMode.telemetry.addData("Robot Rel Angle to Picture", "%4.0f°", robotBearing);
+////            myOpMode.telemetry.addData("Robot", "[X]:[Y] (B) [%5.0fmm]:[%5.0fmm] (%4.0f°)",
+////                    robotX, robotY, robotBearing);
+////            myOpMode.telemetry.addData("Target", "[R] (B):(RB) [%5.0fmm] (%4.0f°):(%4.0f°)",
+////                    targetRange, targetBearing, relativeBearing);
+////            myOpMode.telemetry.addData("- Turn    ", "%s %4.0f°",  relativeBearing < 0 ? ">>> CW " : "<<< CCW", Math.abs(relativeBearing));
+////            myOpMode.telemetry.addData("- Strafe  ", "%s %5.0fmm", robotY < 0 ? "LEFT" : "RIGHT", Math.abs(robotY));
+////            myOpMode.telemetry.addData("- Distance", "%5.0fmm", Math.abs(robotX));
         }
         else
         {
@@ -122,6 +128,7 @@ public class Robot_Navigation
      * @return true if we are close to target
      * @param standOffDistance how close do we get the center of the robot to target (in mm)
      */
+/****
     public boolean cruiseControl(double standOffDistance) {
         boolean closeEnough;
 
@@ -145,18 +152,38 @@ public class Robot_Navigation
 
         return (closeEnough);
     }
-
+****/
 
     /***
      * Initialize the Target Tracking and navigation interface
      * @param opMode    pointer to OpMode
      * @param robot     pointer to Robot hardware class
      */
-    public void initVuforia(LinearOpMode opMode, Robot_OmniDrive robot) {
+////    public void initVuforia(LinearOpMode opMode, Robot_OmniDrive robot) {
+    public void initVuforia(LinearOpMode opMode, CameraType cameraType, CameraRotation cameraRotation) {
+
+        VuforiaLocalizer.CameraDirection cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        float Yrotation = -90; // Back camera
+        float Xrotation = 0;   // Landscape Left
+
+        if (cameraType == CameraType.Front)
+        {
+            cameraDirection = VuforiaLocalizer.CameraDirection.FRONT;
+            Yrotation = 90;
+        }
+
+        if (cameraRotation == CameraRotation.Portrait)
+        {
+            Xrotation = 90;
+        }
+        else if (cameraRotation == CameraRotation.LandscapeRight)
+        {
+            Xrotation = 180;
+        }
 
         // Save reference to OpMode and Hardware map
         myOpMode = opMode;
-        myRobot = robot;
+////        myRobot = robot;
 
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
@@ -171,7 +198,7 @@ public class Robot_Navigation
         // and paste it here...
         parameters.vuforiaLicenseKey = "Afbu2Uv/////AAAAGVouNdSAD0P8la+sq37vCdQ6uLVH8NWrBLnfZ1R5rObJQpVVHJzqvIgMZO5gTqXG6DYJZcgwtSVZXU2g20FAJobxCog9Wc5vtqgJJmrsJ0NOABRbi9vy4Y9IzBVfaDoRsQTmjxxFf62Z9slttsb44KopGpVGTQ83iHnTo/wDvnZBWRhmckG6IKuqkbRYCFD+w1hHvVLuDoIYLgfpa1Rw1Pc7rszP/CDzUfeO9KwodFpEsfZHIZI8KHIYzfRIOhg1Tg0T4eRsLCO8s9vfZd6vfTuUA/sZkID3N7BsrlLaL6vUqheGPvsbPuQQsMqgPNYTqbhvv3KI/SR5WxUaccuVHnpVMhAjkdpruWVliCCZqp1t";
 
-        parameters.cameraDirection = CAMERA_CHOICE;
+        parameters.cameraDirection = cameraDirection;
         parameters.useExtendedTracking = false;
         VuforiaLocalizer vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
@@ -222,15 +249,17 @@ public class Robot_Navigation
          * In this example, it is centered (left to right), but 110 mm forward of the middle of the robot, and 200 mm above ground level.
          */
 
-        final int CAMERA_FORWARD_DISPLACEMENT  = 110;   // Camera is 110 mm in front of robot center
-        final int CAMERA_VERTICAL_DISPLACEMENT = 200;   // Camera is 200 mm above ground
+////        final int CAMERA_FORWARD_DISPLACEMENT  = 110;   // Camera is 110 mm in front of robot center
+        final int CAMERA_FORWARD_DISPLACEMENT  = 0;   // Camera is 110 mm in front of robot center
+////        final int CAMERA_VERTICAL_DISPLACEMENT = 200;   // Camera is 200 mm above ground
+        final int CAMERA_VERTICAL_DISPLACEMENT = 0;   // Camera is 200 mm above ground
         final int CAMERA_LEFT_DISPLACEMENT     = 0;     // Camera is ON the robots center line
 
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
             .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
             .multiplied(Orientation.getRotationMatrix(
                     AxesReference.EXTRINSIC, AxesOrder.YZX,
-                    AngleUnit.DEGREES, CAMERA_CHOICE == VuforiaLocalizer.CameraDirection.FRONT ? 90 : -90, 0, 0));
+                    AngleUnit.DEGREES, Yrotation, 0, Xrotation));
 
         // Set the all the targets to have the same location and camera orientation
         for (VuforiaTrackable trackable : allTrackables)

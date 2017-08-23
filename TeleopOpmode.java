@@ -71,8 +71,9 @@ public class TeleopOpmode extends LinearOpMode {
     public void runOpMode() {
 
         // Initialize the robot and navigation
-        robot.initDrive(this);
-        nav.initVuforia(this, robot);
+////        robot.initDrive(this);
+////        nav.initVuforia(this, robot);
+        nav.initVuforia(this, Robot_Navigation.CameraType.Back, Robot_Navigation.CameraRotation.LandscapeLeft);
 
         // Activate Vuforia (this takes a few seconds)
         nav.activateTracking();
@@ -91,25 +92,25 @@ public class TeleopOpmode extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            telemetry.addData(">", "Press Left Bumper to track target");
+////            telemetry.addData(">", "Press Left Bumper to track target");
 
             // auto drive or manual drive?
             // In auto drive, the robot will approach any target it can see and then press against it
             // In manual drive the robot responds to the Joystick.
             if (nav.targetsAreVisible() && gamepad1.left_bumper) {
                 // Calculate automatic target approach
-                nav.cruiseControl(TARGET_DISTANCE);
+////                nav.cruiseControl(TARGET_DISTANCE);
 
             } else {
                 // Drive the robot using the joysticks
-                robot.manualDrive();
+////                robot.manualDrive();
             }
 
             // Build telemetry messages with Navigation Information;
             nav.addNavTelemetry();
 
             //  Move the robot according to the pre-determined axis motions
-            robot.moveRobot();
+////            robot.moveRobot();
             telemetry.update();
         }
 
