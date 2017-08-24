@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.FTCVuforiaDemo;
+﻿package org.firstinspires.ftc.teamcode.FTCVuforiaDemo;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.robot.Robot;
@@ -14,7 +14,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +29,6 @@ import static android.view.View.X;
  * It focuses on setting up and using the Vuforia Library, which is part of the 2016-2017 FTC SDK
  *
  * Once a target is identified, its information is displayed as telemetry data.
- * To approach the target, three motion priorities are created:
- * - Priority #1 Rotate so the robot is pointing at the target (for best target retention).
- * - Priority #2 Drive laterally based on distance from target center-line
- * - Priority #3 Drive forward based on the desired target standoff distance
  *
  */
 
@@ -47,16 +42,10 @@ public class Robot_Navigation
 
     // Constants
     private static final int     MAX_TARGETS    =   4;
-    private static final double  ON_AXIS        =  10;      // Within 1.0 cm of target center-line
-    private static final double  CLOSE_ENOUGH   =  20;      // Within 2.0 cm of final target standoff
-
-    public  static final double  YAW_GAIN       =  0.018;   // Rate at which we respond to heading error
-    public  static final double  LATERAL_GAIN   =  0.0027;  // Rate at which we respond to off-axis error
-    public  static final double  AXIAL_GAIN     =  0.0017;  // Rate at which we respond to target distance errors
+    private static final double  MM_TO_INCHES   =   1.0 / 25.4;
 
     /* Private class members. */
     private LinearOpMode        myOpMode;       // Access to the OpMode object
-////    private Robot_OmniDrive     myRobot;        // Access to the Robot hardware
     private VuforiaTrackables   targets;        // List of active targets
 
     // Navigation data is only valid if targetFound == true;
@@ -93,16 +82,12 @@ public class Robot_Navigation
         {
             // Display the current visible target name, robot info, target info, and required robot action.
             myOpMode.telemetry.addData("Visible", targetName);
-            myOpMode.telemetry.addData("Robot Range", "%3.0f in", robotX / 25.4);
-            myOpMode.telemetry.addData("Robot Offset", "%3.0f in", robotY / 25.4);
+            myOpMode.telemetry.addData("Robot Range", "%3.0f in", robotX * MM_TO_INCHES);
+            myOpMode.telemetry.addData("Robot Offset", "%3.0f in", robotY * MM_TO_INCHES);
             myOpMode.telemetry.addData("Robot Rel Angle to Picture", "%4.0f°", robotBearing);
-////            myOpMode.telemetry.addData("Robot", "[X]:[Y] (B) [%5.0fmm]:[%5.0fmm] (%4.0f°)",
-////                    robotX, robotY, robotBearing);
-////            myOpMode.telemetry.addData("Target", "[R] (B):(RB) [%5.0fmm] (%4.0f°):(%4.0f°)",
-////                    targetRange, targetBearing, relativeBearing);
-////            myOpMode.telemetry.addData("- Turn    ", "%s %4.0f°",  relativeBearing < 0 ? ">>> CW " : "<<< CCW", Math.abs(relativeBearing));
-////            myOpMode.telemetry.addData("- Strafe  ", "%s %5.0fmm", robotY < 0 ? "LEFT" : "RIGHT", Math.abs(robotY));
-////            myOpMode.telemetry.addData("- Distance", "%5.0fmm", Math.abs(robotX));
+            myOpMode.telemetry.addData("Target Range", "%4.0f in", targetRange * MM_TO_INCHES);
+            myOpMode.telemetry.addData("Target Bearing", "%4.0f°", targetBearing);
+            myOpMode.telemetry.addData("Relative Bearing", "%4.0f°", relativeBearing);
         }
         else
         {
@@ -120,46 +105,42 @@ public class Robot_Navigation
             targets.activate();
     }
 
+    // X displacement from target center
+    public double getRobotX() {
+        return robotX;
+    };
 
-    /***
-     * use target position to determine the best way to approach it.
-     * Set the Axial, Lateral and Yaw axis motion values to get us there.
-     *
-     * @return true if we are close to target
-     * @param standOffDistance how close do we get the center of the robot to target (in mm)
-     */
-/****
-    public boolean cruiseControl(double standOffDistance) {
-        boolean closeEnough;
+    // Y displacement from target center
+    public double getRobotY() {
+        return robotY;
+    };
 
-        // Priority #1 Rotate to always be pointing at the target (for best target retention).
-        double Y  = (relativeBearing * YAW_GAIN);
+    // Robot's rotation around the Z axis (CCW is positive)
+    public double getRobotBearing() {
+        return robotBearing;
+    };
 
-        // Priority #2  Drive laterally based on distance from X axis (same as y value)
-        double L  =(robotY * LATERAL_GAIN);
+    // Range from robot's center to target in mm
+    public double getTargetRange() {
+        return targetRange;
+    };
 
-        // Priority #3 Drive forward based on the desiredHeading target standoff distance
-        double A  = (-(robotX + standOffDistance) * AXIAL_GAIN);
+    // Heading of the target , relative to the robot's unrotated center
+    public double getTargetBearing() {
+        return targetBearing;
+    };
 
-        // Send the desired axis motions to the robot hardware.
-        myRobot.setYaw(Y);
-        myRobot.setAxial(A);
-        myRobot.setLateral(L);
-
-        // Determine if we are close enough to the target for action.
-        closeEnough = ( (Math.abs(robotX + standOffDistance) < CLOSE_ENOUGH) &&
-                        (Math.abs(robotY) < ON_AXIS));
-
-        return (closeEnough);
-    }
-****/
+    // Heading to the target from the robot's current bearing.
+    public double getRelativeBearing() {
+        return relativeBearing;
+    };
 
     /***
      * Initialize the Target Tracking and navigation interface
-     * @param opMode    pointer to OpMode
-     * @param robot     pointer to Robot hardware class
+     * @param opMode          pointer to OpMode
+     * @param cameraType      using front or back camera
+     * @param cameraRotation  orientation of phone
      */
-////    public void initVuforia(LinearOpMode opMode, Robot_OmniDrive robot) {
     public void initVuforia(LinearOpMode opMode, CameraType cameraType, CameraRotation cameraRotation) {
 
         VuforiaLocalizer.CameraDirection cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
@@ -183,7 +164,6 @@ public class Robot_Navigation
 
         // Save reference to OpMode and Hardware map
         myOpMode = opMode;
-////        myRobot = robot;
 
         /**
          * Start up Vuforia, telling it the id of the view that we wish to use as the parent for
@@ -249,10 +229,8 @@ public class Robot_Navigation
          * In this example, it is centered (left to right), but 110 mm forward of the middle of the robot, and 200 mm above ground level.
          */
 
-////        final int CAMERA_FORWARD_DISPLACEMENT  = 110;   // Camera is 110 mm in front of robot center
-        final int CAMERA_FORWARD_DISPLACEMENT  = 0;   // Camera is 110 mm in front of robot center
-////        final int CAMERA_VERTICAL_DISPLACEMENT = 200;   // Camera is 200 mm above ground
-        final int CAMERA_VERTICAL_DISPLACEMENT = 0;   // Camera is 200 mm above ground
+        final int CAMERA_FORWARD_DISPLACEMENT  = 0;   // Camera is 0 mm in front of robot center
+        final int CAMERA_VERTICAL_DISPLACEMENT = 0;   // Camera is 0 mm above ground
         final int CAMERA_LEFT_DISPLACEMENT     = 0;     // Camera is ON the robots center line
 
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
