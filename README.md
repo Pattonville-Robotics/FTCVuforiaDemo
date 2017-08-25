@@ -1,7 +1,5 @@
 ## FTCVuforiaDemo
 
-## FTCVuforiaDemo
-
 This linear opmode demonstrates one way to use Vuforia to track target images.
 It has been provided as Technology Outreach by FTC Team 2818 G-FORCE from Accident MD.
 
@@ -24,7 +22,6 @@ Place any of the four 2016/17 images on the field perimeter.
 To test the OpMode, do the following:
 
 - Init the opmode 
-- Manually move the robot to within a three feet of a target.  Point the robot towards the target.
 - Verify that the target information appears on the Driver Station, and is correct.
 
  
@@ -33,30 +30,24 @@ To test the OpMode, do the following:
 A simplified tracking approach is used, whereby the robot can be made to approach to within a set distance of any visible target.  
 Target localization is converted into a set of 6 values which can be used directly to navigate to the target.
   
-- robotX: Distance from target along X axis in mm. (will be negative)
-- robotY: Offset from target centerline along Y axis in mm. (can be + or -)
+- robotX: Distance from target along X axis in in. (will be negative)
+- robotY: Offset from target centerline along Y axis in in. (can be + or -)
 - robotBearing: Direction Robot is pointing. (+ is CCW from x axis)
-- targetRange: Distance from robot centroid to target center in mm.
+- targetRange: Distance from robot centroid to target center in in.
 - targetBearing: Direction from robot centroid to target center (+ is CCW from x axis)
 - relativeBearing: Angle from robot bearing to target bearing in degrees (+ is CCW)
-
-A standoff TARGET_DISTANCE is defined in the TeleopOpMode to indicate how closely the robot should approach the target. 
-The standdoff distance is measured from the center of the robot to the target in mm.
 
 ### Telemetry Display
 
 Telemetry Data displays robot and target information whenever a target is "visible"
 A sample display is shown here:
 
-- Visible     blue near
-- Robot       [X]:[Y] (B) [-646mm]:[80mm] (5°)
-- Target      [R] (B):(RB) [651mm] (-7f°):(-12°)
-- Turn      >>> CW 12°
-- Strafe    RIGHT 80mm
-- Distance  646mm
-- Axes        A[0.42], L[0.22], Y[-0.21]
-- Wheels      L[-0.74], R[0.09], B[0.00]
-
+- Visible : Blue Near
+- Robot Range : -24 in
+- Robot Offset : 2 in
+- Robot Rel Angle to Picture : -7°
+- Target Range : 24 in
+- Target Bearing : 2°
  
  
 
